@@ -1,1 +1,1 @@
-Smart Contracts for Nest | Private Web3 Communities
+Smart Contracts for Surity
