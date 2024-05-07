@@ -4,6 +4,7 @@ pragma solidity ^0.8.6;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/ERC20.sol";
 import "./InsuranceController.sol";
+import "./Surecoin.sol";
 
 contract Surity {
     ERC20 usdt;
@@ -13,8 +14,9 @@ contract Surity {
     uint256 rewardRate;
     uint256 deployedAt;
 
-    constructor(address _usdtAddress, address _rewardTokenAddress) {
-        rewardToken = ERC20(_rewardTokenAddress);
+    constructor(address _usdtAddress) {
+        SureCoin surecoin = new SureCoin(100000000 * (10 ** 18));
+        rewardToken = ERC20(address(surecoin));
         usdt = ERC20(_usdtAddress);
         deployedAt = block.timestamp;
     }
