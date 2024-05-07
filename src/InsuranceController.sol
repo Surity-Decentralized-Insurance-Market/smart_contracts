@@ -3,23 +3,25 @@
 pragma solidity ^0.8.6;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.6.0/contracts/token/ERC20/ERC20.sol";
+import "./Surity.sol";
 
 contract InsuranceController {
     ERC20 usdt;
+    Surity surity;
     address public serverAddress =
         address(0x27b6E7edae917EB5AC116597A7C2279F4CB0620B);
     address public owner;
+
     uint256 public initialStake;
 
-    bytes32 digest; // Name, PremiumCalculationFunction, ClaimValidationFunction
-    bool initialized;
+    bytes32 public digestFunctionVerification; // PremiumCalculationFunction, ClaimValidationFunction
 
     struct Stake {
         uint256 timestamp;
         uint256 amount;
     }
 
-    mapping(address => Stake[]) stakes;
+    mapping(address => Stake[]) private stakes;
     address[] stakers;
 
     enum InstanceState {
@@ -44,22 +46,30 @@ contract InsuranceController {
         address _serverAddress,
         address _usdtAddress,
         uint256 _initialStake,
-        bytes32 _digest
+        bytes32 _hashedName,
+        bytes memory _serverSignedContractVerification,
+        bytes32 _digestFunctionVerification
     ) {
         serverAddress = _serverAddress;
+
+        require(
+            recoverAddressV2(
+                keccak256(
+                    abi.encodePacked(
+                        _hashedName,
+                        keccak256(abi.encodePacked(tx.origin))
+                    )
+                ),
+                _serverSignedContractVerification
+            ) == serverAddress,
+            "Tampered Server Signature"
+        );
+
+        surity = Surity(msg.sender);
         usdt = ERC20(_usdtAddress);
         initialStake = _initialStake * (10 ** usdt.decimals());
-        owner = msg.sender;
-        digest = _digest;
-    }
-
-    function initialize() public {
-        // Transfer tokens from sender to contract
-        require(
-            usdt.transferFrom(msg.sender, address(this), initialStake),
-            "Transfer failed"
-        );
-        initialized = true;
+        owner = tx.origin;
+        digestFunctionVerification = _digestFunctionVerification;
     }
 
     modifier ownerOnly() {
@@ -163,7 +173,7 @@ contract InsuranceController {
         onlyServerSigned(
             keccak256(
                 abi.encodePacked(
-                    msg.sender,
+                    keccak256(abi.encodePacked(msg.sender)),
                     getLatestInstance(msg.sender).claimFunction,
                     _executionTimestamp,
                     "Claimable"
@@ -197,6 +207,18 @@ contract InsuranceController {
         }
         Stake memory newStake = Stake(block.timestamp, _amount);
         stakes[msg.sender].push(newStake);
+        surity.addPolicyToUsersRecords(msg.sender);
+    }
+
+    function getStakesCountByUser(address _user) public view returns (uint256) {
+        return stakes[_user].length;
+    }
+
+    function getStakeOfUserByIndex(
+        address _user,
+        uint256 _index
+    ) public view returns (uint256, uint256) {
+        return (stakes[_user][_index].amount, stakes[_user][_index].timestamp);
     }
 
     function revokeStake(uint256 _index) external {
