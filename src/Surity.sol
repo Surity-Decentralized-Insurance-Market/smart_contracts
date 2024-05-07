@@ -128,6 +128,16 @@ contract Surity {
             rewardsGivenOut;
     }
 
+    function claimRewardEarned(address _policy, uint256 _index) external {
+        uint256 reward = getRewardEarned(msg.sender, _policy, _index);
+        require(reward > 1, "Earn more rewards before claiming");
+        InsuranceController(_policy).removeStake(msg.sender, _index);
+        require(
+            rewardToken.transfer(msg.sender, reward),
+            "Failed to transfer, please try again"
+        );
+    }
+
     function toEthSignedMessageHash(
         bytes32 hash
     ) internal pure returns (bytes32 _message) {

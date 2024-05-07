@@ -234,6 +234,20 @@ contract InsuranceController {
         delete stakes[msg.sender][_index];
     }
 
+    function removeStake(address _user, uint256 _index) external {
+        require(
+            msg.sender == owner || msg.sender == address(surity),
+            "Unauthorized"
+        );
+        uint256 stakedAmount = stakes[_user][_index].amount;
+        require(
+            usdt.balanceOf(address(this)) > stakedAmount,
+            "Sorry, not enough tokens in pool"
+        );
+        require(usdt.transfer(_user, stakedAmount), "Failed to transfer money");
+        delete stakes[_user][_index];
+    }
+
     function toEthSignedMessageHash(
         bytes32 hash
     ) internal pure returns (bytes32 _message) {
