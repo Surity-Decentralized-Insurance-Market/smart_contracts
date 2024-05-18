@@ -46,24 +46,22 @@ contract InsuranceController {
         address _serverAddress,
         address _usdtAddress,
         uint256 _initialStake,
-        bytes32 _hashedName,
-        bytes memory _serverSignedContractVerification,
         bytes32 _digestFunctionVerification
     ) {
         serverAddress = _serverAddress;
 
-        require(
-            recoverAddressV2(
-                keccak256(
-                    abi.encodePacked(
-                        _hashedName,
-                        keccak256(abi.encodePacked(tx.origin))
-                    )
-                ),
-                _serverSignedContractVerification
-            ) == serverAddress,
-            "Tampered Server Signature"
-        );
+        // require(
+        //     recoverAddressV2(
+        //         keccak256(
+        //             abi.encodePacked(
+        //                 _hashedName,
+        //                 keccak256(abi.encodePacked(tx.origin))
+        //             )
+        //         ),
+        //         _serverSignedContractVerification
+        //     ) == serverAddress,
+        //     "Tampered Server Signature"
+        // );
 
         surity = Surity(msg.sender);
         usdt = ERC20(_usdtAddress);

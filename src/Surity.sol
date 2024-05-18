@@ -15,7 +15,7 @@ contract Surity {
     uint256 deployedAt;
 
     constructor(address _usdtAddress) {
-        SureCoin surecoin = new SureCoin(100000000 * (10 ** 18));
+        SureCoin surecoin = new SureCoin(100000000 * (10**18));
         rewardToken = ERC20(address(surecoin));
         usdt = ERC20(_usdtAddress);
         deployedAt = block.timestamp;
@@ -39,8 +39,6 @@ contract Surity {
 
     function deployNewScheme(
         uint256 _initialStake,
-        bytes32 _hashedName,
-        bytes memory _serverSignedContractVerification,
         bytes32 _digestFunctionVerification
     ) external returns (address) {
         require(
@@ -55,8 +53,6 @@ contract Surity {
             serverAddress,
             address(usdt),
             _initialStake,
-            _hashedName,
-            _serverSignedContractVerification,
             _digestFunctionVerification
         );
         schemes.push(address(scheme));
@@ -64,13 +60,19 @@ contract Surity {
         return address(scheme);
     }
 
+    function getLatestScheme() public view returns (address) {
+        return schemes[schemes.length - 1];
+    }
+
     function getAllSchemes() public view returns (address[] memory) {
         return schemes;
     }
 
-    function getpoliciesStakedInByUser(
-        address _addr
-    ) public view returns (address[] memory) {
+    function getpoliciesStakedInByUser(address _addr)
+        public
+        view
+        returns (address[] memory)
+    {
         return policiesStakedInByUserArray[_addr];
     }
 
@@ -89,7 +91,7 @@ contract Surity {
         address _user,
         address _policy,
         uint256 _index
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         uint256 denom = 0;
         for (uint256 i = 0; i < stakers.length; i++) {
             for (
@@ -138,9 +140,11 @@ contract Surity {
         );
     }
 
-    function toEthSignedMessageHash(
-        bytes32 hash
-    ) internal pure returns (bytes32 _message) {
+    function toEthSignedMessageHash(bytes32 hash)
+        internal
+        pure
+        returns (bytes32 _message)
+    {
         assembly {
             mstore(0x00, "\x19Ethereum Signed Message:\n32")
             mstore(0x1c, hash)
@@ -148,10 +152,11 @@ contract Surity {
         }
     }
 
-    function recoverAddressV2(
-        bytes32 _packed,
-        bytes memory _signature
-    ) public pure returns (address) {
+    function recoverAddressV2(bytes32 _packed, bytes memory _signature)
+        public
+        pure
+        returns (address)
+    {
         bytes32 message = toEthSignedMessageHash(_packed);
 
         bytes32 r;
